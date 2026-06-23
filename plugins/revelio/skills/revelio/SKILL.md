@@ -95,18 +95,36 @@ nitpick style on pre-existing code unless asked.
 
 ## Phase 3: Review Execution
 
-### Universal lenses (always applied)
+**Always fan out into independent, parallel reviewers — never review a diff inline
+as the primary agent.** Dispatch one sub-agent per lens (and per detected
+technology) in a single message with multiple Task calls. **Never** set
+`run_in_background: true` (permissions won't work in the background).
+
+Why fan out every time: each sub-agent reviews in a **fresh context** with no
+memory of having written the code. In autonomous mode the same session that
+authored the change is biased toward "looks correct" and tends to confirm rather
+than scrutinize; independent reviewers don't carry that bias, and a dedicated
+context per lens forces a deeper, more skeptical pass than one agent juggling
+every concern at once. The cost is wall-clock time and tokens — that is expected
+and worth it. (The only inline exceptions: a pasted snippet too small to diff, or
+when `git`/`gh` is unavailable.)
+
+### Reviewers to dispatch
+
+**Three universal lenses — always dispatch all three:**
 
 - **Security** — injection, auth, secrets, unsafe input handling, data exposure.
 - **Architecture** — boundaries, coupling/cohesion, SOLID, correctness, performance.
 - **Code Quality** — readability, maintainability, DRY, error handling, tests.
 
-### Technology experts
+**Technology specialists — one sub-agent per technology present in the diff:**
 
-Inspect the diff for the signals below. For each technology present, apply its
-lens **and consult the listed skills** — invoke them with the Skill tool to load
-current best-practice guidance, then review the change against it. The installed
-Apple skills are the expert references; consult them rather than relying on memory.
+Match the diff against the signals below and dispatch a specialist for each
+technology that appears. In each specialist's prompt, instruct it to **load the
+listed skill(s) via the Skill tool first** (the installed Apple skills are the
+expert references — consult them, don't rely on memory), then review. If a listed
+skill isn't available to the sub-agent, fall back to built-in knowledge of that
+framework.
 
 | Detected in the diff | Lens | Consult |
 | - | - | - |
@@ -133,15 +151,16 @@ sync-over-async deadlocks), `IDisposable`/`using` discipline, DI lifetimes
 (captive dependencies), EF tracking vs `AsNoTracking`, N+1 queries, transaction
 scope, and nullable-reference-type annotations.
 
-### Sizing and optional fan-out
+### The sub-agent prompt
 
-Review directly as the primary agent by default — most solo diffs are small.
-For a large or multi-area diff (roughly ≥ 400 changed lines, or several distinct
-technologies at once), optionally dispatch sub-agents in parallel — one per lens
-or per technology — in a single message with multiple Task calls. **Never** use
-`run_in_background: true` (permissions won't work).
+Give every dispatched reviewer: the diff (or, for file/folder reviews, the changed
+files), its lens or specialty, and these instructions — review only the change
+against the Phase 2 scope rules; you did **not** write this code, so review it
+skeptically and assume nothing is correct until verified; (specialists only) load
+your skill(s) via the Skill tool first; use full file paths from the repository
+root; return the findings block and nothing else.
 
-When sub-agents are used, each returns findings in this structure:
+Each sub-agent returns findings in this structure:
 
 ```yaml
 expert: Security|Architecture|Code Quality|Swift|Web|...
@@ -161,7 +180,9 @@ Always use full file paths from the repository root, not abbreviated names.
 
 ---
 
-## Phase 4: De-duplication (only when sub-agents were used)
+## Phase 4: Consolidation
+
+Collect every sub-agent's findings, then:
 
 1. **Merge duplicates** — the same issue from multiple lenses becomes one finding.
 2. **Tag domains** — add `domains: [Security, Swift]` to merged findings.

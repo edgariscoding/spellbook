@@ -1,6 +1,6 @@
 {
   "name": "revelio",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "The Revealing Charm for your code. A scope-disciplined, multi-lens code review that surfaces hidden issues — security, architecture, and quality lenses plus technology experts for Swift/Apple, Safari web extensions, .NET, Python, and Bash. Writes findings with severity and a verdict to a local report.",
   "author": {
     "name": "Edgar Sanchez"

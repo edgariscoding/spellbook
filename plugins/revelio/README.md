@@ -23,9 +23,12 @@ comments, sets approval status, or notifies anyone.
 
 ## What it looks at
 
-Three universal lenses on every review — **Security**, **Architecture**, and
-**Code Quality** — plus technology experts that activate based on what's in the
-diff:
+Every review **fans out into independent, parallel sub-agents** — one per lens,
+plus one per technology found in the diff. Each reviews in a fresh context (no
+memory of having written the code, so no self-review bias) and the results are
+consolidated, deduplicated, and validated into a single report. Three universal
+lenses run on every review — **Security**, **Architecture**, and **Code
+Quality** — plus technology experts that activate based on what's in the diff:
 
 | In the diff | Lens | Consults |
 | - | - | - |

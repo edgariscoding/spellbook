@@ -1,7 +1,7 @@
 {
   "name": "spellbook",
   "description": "Edgar's personal collection of Claude Code plugins",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "owner": {
     "name": "Edgar Sanchez",
     "email": "edgar@sanchez.is"
