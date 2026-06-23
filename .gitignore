@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+Icon?
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Node (in case a future plugin bundles JS tooling)
+node_modules/
+
+# Local review artifacts produced by revelio when run inside this repo
+docs/reviews/
