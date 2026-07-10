@@ -1,7 +1,7 @@
 {
   "name": "spellbook",
   "description": "Edgar's personal collection of Claude Code plugins",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "owner": {
     "name": "Edgar Sanchez",
     "email": "edgar@sanchez.is"
@@ -11,6 +11,13 @@
       "name": "revelio",
       "description": "Multi-lens code review that reveals hidden issues before you open a GitHub PR — security, architecture, and quality lenses plus technology experts for Swift/Apple, Safari web extensions, .NET, Python, and Bash.",
       "source": "./plugins/revelio",
+      "category": "developer-tools",
+      "homepage": "https://github.com/edgariscoding/spellbook"
+    },
+    {
+      "name": "legilimens",
+      "description": "Turns a rough idea into an agreed design through Socratic dialogue — one question at a time, real alternatives with trade-offs, and a design approved section by section — then writes the spec and hands off. Never writes code.",
+      "source": "./plugins/legilimens",
       "category": "developer-tools",
       "homepage": "https://github.com/edgariscoding/spellbook"
     }

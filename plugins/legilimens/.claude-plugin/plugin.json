@@ -1,0 +1,8 @@
+{
+  "name": "legilimens",
+  "version": "1.0.0",
+  "description": "The Mind-Reading Charm for your ideas. Turns a rough idea into an agreed design through Socratic dialogue — one question at a time, real alternatives with trade-offs, and a design approved section by section — then writes it up as a spec and stops. Never writes code.",
+  "author": {
+    "name": "Edgar Sanchez"
+  }
+}
