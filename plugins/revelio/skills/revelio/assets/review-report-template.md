@@ -18,17 +18,17 @@
 
 | Severity | In scope | Out of scope |
 | - | - | - |
-| 🔴 CRITICAL | {n} | {n} |
-| 🟠 HIGH | {n} | {n} |
-| 🟡 MEDIUM | {n} | {n} |
-| 🟢 LOW | {n} | {n} |
-| ℹ️ INFO | {n} | {n} |
+| 🚨 CRITICAL | {n} | {n} |
+| 🔴 HIGH | {n} | {n} |
+| 🟠 MEDIUM | {n} | {n} |
+| 🟡 LOW | {n} | {n} |
+| 🔵 INFO | {n} | {n} |
 
 ## In-scope findings
 
 ### {SEVERITY}-001 · {title}
 
-- **Severity:** {🔴 CRITICAL | 🟠 HIGH | 🟡 MEDIUM | 🟢 LOW | ℹ️ INFO}
+- **Severity:** {🚨 CRITICAL | 🔴 HIGH | 🟠 MEDIUM | 🟡 LOW | 🔵 INFO}
 - **Domains:** {Security, Architecture, Swift, Web, …}
 - **Location:** `{full/path/from/repo/root.ext:123}`
 

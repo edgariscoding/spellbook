@@ -24,6 +24,26 @@ anyone.
 
 ---
 
+## Two modes
+
+Revelio runs in one of two modes. **Single pass is the default**; the loop is
+**opt-in** behind an explicit trigger.
+
+| Mode | Trigger phrases | What it does |
+| - | - | - |
+| **Single pass** (default) | "review my branch", "review PR #N", "review these files", "review before I open a PR" | One fan-out, one report, one summary. **Review-only** — reports findings and never fixes. |
+| **Loop** (opt-in) | "review loop", "review, fix, and re-review", "loop the review" | Orchestrates rounds: review → apply the fixes that hold up → fresh, blind re-review → repeat until convergence. Fixes code between rounds. |
+
+Single pass is Phases 1–6 below, run once. The loop wraps those phases: each
+round is a fan-out (Phases 3–5) that reads the *current* code in place, and the
+orchestrator fixes validated findings between rounds. Loop mechanics are in
+**Loop mode** at the end.
+
+Most reviews do not need the loop — it costs 2–3× the tokens and wall-clock. Use
+single pass unless the request explicitly asks to loop.
+
+---
+
 ## Phase 1: Scope Analysis
 
 Pick the review type from the request:
@@ -206,11 +226,11 @@ Be adversarial before publishing. Validate every CRITICAL / HIGH / MEDIUM:
 
 | Level | Criteria | Effect on verdict |
 | - | - | - |
-| 🔴 CRITICAL | Security holes, data loss, breaking changes | Blocks |
-| 🟠 HIGH | Bugs, significant design issues | Blocks |
-| 🟡 MEDIUM | Code quality, maintainability | Blocks |
-| 🟢 LOW | Style, minor improvements | Optional |
-| ℹ️ INFO | Observations | Awareness |
+| 🚨 CRITICAL | Security holes, data loss, breaking changes | Blocks |
+| 🔴 HIGH | Bugs, significant design issues | Blocks |
+| 🟠 MEDIUM | Code quality, maintainability | Blocks |
+| 🟡 LOW | Style, minor improvements | Optional |
+| 🔵 INFO | Observations | Awareness |
 
 | Condition (in-scope) | Verdict |
 | - | - |
@@ -236,15 +256,140 @@ This report is a **local artifact**: do **not** `git add`, commit, or push it. I
 `docs/reviews/` is not gitignored in the target repo, mention it and offer to add
 the line — don't silently edit the consumer's `.gitignore`.
 
-### Finish with a summary (this is the completion contract)
+### Finish with a summary (single-pass completion contract)
 
-Revelio is often invoked by another agent mid-task, so end every run with a
-compact, machine-readable summary in the chat:
+Revelio is often invoked by another agent mid-task, so end every single-pass run
+with a compact summary in the chat:
 
 - The **verdict** and finding counts by severity (in-scope).
-- The top blocking findings (CRITICAL / HIGH / MEDIUM), one line each:
-  `SEVERITY · location · title`.
+- Each blocking finding (CRITICAL / HIGH / MEDIUM), one line each, highest first:
+  `<emoji> <location> · <title>` (🚨 / 🔴 / 🟠 per the palette). No round tag and
+  no disposition — a single pass fixes nothing.
 - The **explicit report path** so the caller can re-open the full report, e.g.
   `Full report: ./docs/reviews/2026-06-23-review-42.md`.
+
+No round-overview table for a single pass. Do not commit, push, open or comment
+on a PR, or notify anyone. Stop here.
+
+For loop mode, the completion contract is the **loop summary** in Loop mode below.
+
+---
+
+## Loop mode
+
+Opt-in only (see **Two modes**). The invoking agent is the **orchestrator**: it
+dispatches a review round, validates and applies the fixes that hold up,
+dispatches a fresh round over the fixed code, and repeats until a round stops
+surfacing substance. Why loop: the fixes are themselves unreviewed code — a fix
+can introduce a false comment, a vacuous test, or a fresh bug — so an independent
+second pass catches those and a third confirms convergence.
+
+Each round runs Phases 3–5 (fan-out → consolidate → validate) and appends to the
+report (Phase 6). Scope (Phase 1–2) is set once, at the start of the loop.
+
+### How a round reads the code
+
+Reviewers are `Agent`-tool sub-agents that read the branch **in place, from the
+same working directory** — no independent checkout. Each round therefore sees the
+*current* code, including the previous round's fixes, automatically. (Worktree
+isolation is for agents that mutate files in parallel; review is read-only, so it
+is not used.)
+
+### Reviewers stay blind to prior rounds
+
+Each round's reviewers receive only the diff (or files) plus the specific files to
+read — **never the report, never the prior findings**. Blindness is the point: a
+reviewer who has read "R1 fixed X" tends to confirm rather than re-scrutinize, and
+inherits the prior round's blind spots. Blind reviewers are exactly what let later
+rounds find defects *in the fixes*.
+
+### Narrow scope each round
+
+Later rounds review the **surface changed since the previous round** (the fixes),
+not a full re-run of every lens. The fan-out shrinks as the change settles — in
+the reference run it went 5 reviewers → 3 → 2.
+
+### The report is the orchestrator's cross-round ledger
+
+The on-disk report (`./docs/reviews/<date>-review-<name>.md`) is the
+orchestrator's durable memory of what was found / fixed / deferred / disproved,
+and it survives context summarization mid-loop. Between rounds:
+
+1. Read your own report.
+2. Inject a curated **"known/deferred — do not re-report"** list into each fresh
+   reviewer's prompt, so a deferred finding is not re-flagged as new every round.
+   (This — not handing over the report — is what prevents re-litigation while
+   keeping reviewers blind.)
+3. Append a `## Review Round {N}` section (per Phase 6) and update the top-level
+   verdict.
+
+It stays a **local, uncommitted artifact** — never `git add`ed — for the whole
+loop (see Phase 6).
+
+### Guardrails
+
+- **No manufactured findings.** Every later-round reviewer's prompt must include:
+  "report ONLY what you can substantiate; if the change is sound, say so plainly —
+  do not invent findings to appear thorough." Without this, later rounds fabricate
+  noise to justify their own existence.
+- **Adversarial before fixing.** Validate findings (Phase 5) before applying a
+  fix. A finding that does not hold up is recorded as `disproved`, not fixed.
+- **Only the orchestrator fixes, and only between rounds.** A reviewer never fixes
+  its own findings. Because the next round's reviewers are fresh and blind,
+  orchestrator fixes never compromise reviewer independence.
+
+### Convergence and the round cap
+
+- After a round, if it produced any **new in-scope finding at MEDIUM or above** (a
+  re-report of a known/deferred item does not count), fix them and run another
+  round.
+- **Stop** when a round returns only LOW/INFO in scope, or nothing new — converged.
+- **Default cap: 3 rounds.** You MAY run a **4th** if round 3 still surfaced
+  substantive MEDIUM+ and another round looks productive — but you must state that
+  judgment in the stop-reason line. Never silently exceed the cap.
+
+### Loop completion contract — the conversation summary
+
+At the end of the loop, print this directly into the chat: a round-overview table,
+then the C/H/M findings one per line, then a stop-reason and the report path.
+LOW/INFO are counts only.
+
+A header line, then the round-overview table (one row per round; the Reviewers
+column lists that round's lenses):
+
+```
+Code review · {N} rounds · {✅ Approved | ⚠️ Changes requested | 🚫 Blocked}
+```
+
+| Round | Reviewers | 🚨 | 🔴 | 🟠 | 🟡 | 🔵 | Verdict |
+| - | - | - | - | - | - | - | - |
+| R1 | Security · Architecture · Code Quality · Swift · Test Quality | 0 | 1 | 5 | 3 | 2 | ⚠️ Changes requested |
+| R2 | Correctness · Code Quality · Test Rigor | 0 | 0 | 1 | 3 | 1 | ⚠️ Changes requested |
+| R3 | Comment Accuracy · Test Rigor | 0 | 0 | 0 | 2 | 2 | ✅ Approved |
+
+Then the findings block. Each C/H/M finding is one line —
+`<emoji> R<n> · <title> — <disposition>` — where the round tag `R<n>` shows *when*
+the finding surfaced (making "a later round caught a defect in an earlier round's
+fix" visible at a glance) and disposition is `fixed | deferred | disproved | open`.
+LOW/INFO collapse to counts:
+
+```
+Findings (🚨 · 🔴 · 🟠) — 🟡 7 low · 🔵 5 info (in report)
+🔴 R1 · retreat() step size untested — fixed
+🟠 R1 · chevron.left doesn't mirror under RTL — fixed
+🟠 R1 · unbounded while-loop can hang the test target — fixed
+🟠 R1 · clamp test traps on a negative index — fixed
+🟠 R1 · gate-independence test is tautological — fixed
+🟠 R1 · comment asserts unverified "Mac has no swipe" — fixed
+🟠 R2 · docstring claims coverage the test lacks — fixed
+🟠 R3 · off-by-one symptom named is unreachable — fixed
+
+Stopped after R3: round returned only low/info — converged.
+Report: ./docs/reviews/2026-07-19-review-271.md
+```
+
+The **stop-reason** line states why the loop ended: "converged" (only LOW/INFO or
+nothing new), "hit the 3-round cap", or — for a 4th round — the explicit judgment
+that justified taking it.
 
 Do not commit, push, open or comment on a PR, or notify anyone. Stop here.

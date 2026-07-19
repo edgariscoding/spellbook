@@ -13,6 +13,21 @@ comments, sets approval status, or notifies anyone.
 "review my branch", "review my changes", "review PR #N", "review staged changes",
 "review these files", "review this code", or "review before I open a PR".
 
+## Modes
+
+- **Single pass** (default) — one fan-out, one report, one summary. Review-only:
+  reports findings and never fixes. This is what the triggers above run.
+- **Loop** (opt-in) — review → apply the fixes that hold up → fresh, blind
+  re-review → repeat until a round surfaces only LOW/INFO (converged), capped at
+  3 rounds (a 4th only with stated justification). Fixes code between rounds.
+  Triggered explicitly by **"review loop"**, **"review, fix, and re-review"**, or
+  **"loop the review"**.
+
+Each loop round dispatches fresh reviewers that are **blind to prior rounds** —
+they see only the current code, never the earlier findings — which is what lets a
+later round catch a defect in an earlier round's *fix*. The loop costs 2–3× the
+tokens and wall-clock, so single pass stays the default.
+
 ## Review targets
 
 - **Branch diff** — `git diff <base>...HEAD` (auto-detects the default branch).
@@ -45,12 +60,15 @@ current platform guidance rather than memory.
 
 ## Output
 
-- Writes a report to `./docs/reviews/<YYYY-MM-DD>-review-<name>.md`.
+- Writes a report to `./docs/reviews/<YYYY-MM-DD>-review-<name>.md`. In loop mode
+  each round appends a `## Review Round {N}` section to the same report.
 - The report is a **local artifact** — not committed or pushed. Add
   `docs/reviews/` to your `.gitignore`.
-- Ends with a chat summary (verdict, severity counts, top blocking findings) that
-  finishes with the report path, so an autonomous agent gets the result inline and
-  can re-open the full report.
+- Ends with a chat summary that finishes with the report path, so an autonomous
+  agent gets the result inline and can re-open the full report. A single pass
+  prints the verdict, severity counts, and top blocking findings; a loop prints a
+  round-overview table, the C/H/M findings tagged by round and disposition, and a
+  stop-reason.
 
 ## Verdict
 
