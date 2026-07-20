@@ -7,9 +7,12 @@ description: >-
   plus technology experts for Swift/SwiftUI/UIKit, Safari web extensions
   (TypeScript/JavaScript), .NET/C#, Python, and Bash — consulting installed
   Apple skills where available. Produces severity-rated findings and a verdict,
-  writes them to a local report under ./docs/reviews/, and prints a summary that
-  ends with the report path. Use when asked to review code, a branch, or a PR,
-  or before opening a GitHub PR.
+  applies the fixes that hold up, writes a local report under ./docs/reviews/, and
+  always ends by printing two summary tables into the chat — what the review found,
+  and what was done about each finding — followed by the report path. Runs a single
+  pass or a multi-round review loop, chosen from how critical, complex, and broad
+  the change is. Use when asked to review code, a branch, or a PR, or before
+  opening a GitHub PR.
 ---
 
 # Revelio — the Revealing Charm for your code
@@ -18,29 +21,62 @@ Reveal what's hidden: bugs, vulnerabilities, design problems, and quality issues
 in changed code. Pragmatic and scope-disciplined — review the change, flag
 pre-existing problems separately, and never block on noise.
 
-This is a **solo, GitHub-oriented, pre-PR review**. It reads code and reports
-findings; it does not create PRs, post comments, set approval status, or notify
-anyone.
+This is a **solo, GitHub-oriented, pre-PR review**. It reads code, applies the
+fixes that hold up, and reports findings; it does not create PRs, post comments,
+set approval status, or notify anyone.
+
+> **Completion gate — do this before you stop, on every run, even when invoked
+> mid-task by another agent.** Print the summary tables directly into the chat and
+> end with the report path. **Table 1 (what the review found) always; Table 2 (what
+> was done about each finding) whenever fixes were applied.** The review is not
+> complete until they are in the conversation — the fan-out returning is not the
+> end. Never `git add`, commit, or push the report; it is a local, gitignored
+> artifact. Exact table shapes are in Phase 6 and Loop mode.
 
 ---
 
-## Two modes
+## Choosing the mode
 
-Revelio runs in one of two modes. **Single pass is the default**; the loop is
-**opt-in** behind an explicit trigger.
+Revelio runs in one of two modes. **Pick the mode from the change itself** — its
+criticality, complexity, and breadth — not from a fixed default.
 
-| Mode | Trigger phrases | What it does |
-| - | - | - |
-| **Single pass** (default) | "review my branch", "review PR #N", "review these files", "review before I open a PR" | One fan-out, one report, one summary. **Review-only** — reports findings and never fixes. |
-| **Loop** (opt-in) | "review loop", "review, fix, and re-review", "loop the review" | Orchestrates rounds: review → apply the fixes that hold up → fresh, blind re-review → repeat until convergence. Fixes code between rounds. |
+| Mode | What it does |
+| - | - |
+| **Single pass** | One fan-out, one report. Reviews, then applies the fixes that hold up. |
+| **Loop** | Rounds: review → apply the fixes that hold up → fresh, blind re-review → repeat until convergence. Catches defects in the fixes themselves. |
+
+Both modes apply fixes; the loop adds the re-review rounds. See **Applying fixes**.
+
+### Use loop when any of these hold
+
+- **Core / backbone** — auth, persistence / migrations, concurrency / async /
+  cancellation / state machines, security-sensitive paths, widely-imported shared
+  infrastructure, public API / protocols / interfaces, build / release / CI config.
+- **Correctness-critical** — a bug there means data loss, a crash, a security hole,
+  or silently wrong behavior.
+- **Broad** — ≥2 technology specialists triggered on a non-trivial change, or a
+  large diff (≥~8 files or ≥~300 net lines).
+
+### Otherwise use single pass
+
+Changes confined to one surface, small-to-moderate in size, in non-core logic: UI /
+layout / copy, docs, comments, tests-only, config value tweaks, dependency bumps —
+and the ordinary middle ground of everyday feature work.
+
+**Tie-break:** when genuinely uncertain and the change is not clearly core,
+critical, or broad, prefer single pass. Loop costs 2–3× the tokens and wall-clock,
+so reserve it for changes that clearly meet a trigger above.
+
+**Overrides and announcement.** An explicit request always wins over the heuristic:
+"single pass" / "just one pass" forces single; "review loop", "review, fix, and
+re-review", "loop the review" force loop. Before dispatching reviewers, state the
+chosen mode and the one-line reason, e.g. `Loop mode — the change reworks the
+cancellation path in shared async infrastructure across 6 files.`
 
 Single pass is Phases 1–6 below, run once. The loop wraps those phases: each
 round is a fan-out (Phases 3–5) that reads the *current* code in place, and the
 orchestrator fixes validated findings between rounds. Loop mechanics are in
 **Loop mode** at the end.
-
-Most reviews do not need the loop — it costs 2–3× the tokens and wall-clock. Use
-single pass unless the request explicitly asks to loop.
 
 ---
 
@@ -222,6 +258,35 @@ Be adversarial before publishing. Validate every CRITICAL / HIGH / MEDIUM:
 
 ---
 
+## Applying fixes
+
+After validation (Phase 5), **apply the fixes that hold up** — in both modes. This
+is the same orchestrator role the loop uses between rounds; a single pass simply
+does it once and does not re-review.
+
+- Fix only **validated** findings. A finding that did not survive Phase 5 is
+  recorded as `disproved`, never as "fixed".
+- **Reviewers never fix their own findings** — only the orchestrating session
+  applies fixes, which is what keeps the next loop round's reviewers fresh and
+  blind.
+- Record a **disposition** for every in-scope C/H/M finding, and carry it into the
+  report and Table 2:
+
+| Disposition | Meaning |
+| - | - |
+| `fixed` | Validated and corrected in this run. |
+| `deferred` | Real, but intentionally not fixed now — state why in the note. |
+| `disproved` | Did not survive Phase 5 validation; not a real defect. |
+| `open` | Unaddressed when the run stopped. |
+
+**Review-only override.** If the request is to *only* review — "just review",
+"review only", "don't touch my code", "tell me what's wrong" — skip fixing
+entirely. Every finding's disposition is `open`, you print **Table 1 only**, and
+you say in one line that no fixes were applied because a review-only run was
+requested. Fixing is otherwise standard in both modes.
+
+---
+
 ## Severity and verdict
 
 | Level | Criteria | Effect on verdict |
@@ -256,17 +321,46 @@ This report is a **local artifact**: do **not** `git add`, commit, or push it. I
 `docs/reviews/` is not gitignored in the target repo, mention it and offer to add
 the line — don't silently edit the consumer's `.gitignore`.
 
-### Finish with a summary (single-pass completion contract)
+### Finish with the summary tables (single-pass completion contract)
 
-Revelio is often invoked by another agent mid-task, so end every single-pass run
-with a compact summary in the chat:
+Revelio is often invoked by another agent mid-task, so **every run ends with the
+summary tables printed directly in the chat.** This is a hard gate, not a courtesy:
+an agent that dispatched reviewers, read their findings, and moved on without
+printing these has not finished the review. Print a header line, both tables, then
+the report path.
 
-- The **verdict** and finding counts by severity (in-scope).
-- Each blocking finding (CRITICAL / HIGH / MEDIUM), one line each, highest first:
-  `<emoji> <location> · <title>` (🚨 / 🔴 / 🟠 per the palette). No round tag and
-  no disposition — a single pass fixes nothing.
-- The **explicit report path** so the caller can re-open the full report, e.g.
-  `Full report: ./docs/reviews/2026-06-23-review-42.md`.
+Header line:
+
+```
+Code review · single pass · {✅ Approved | ⚠️ Changes requested | 🚫 Blocked}
+```
+
+**Table 1 — what the review found.** Every in-scope C/H/M finding, highest severity
+first. LOW/INFO collapse to a counts line beneath it.
+
+| Sev | Location | Finding |
+| - | - | - |
+| 🔴 | `Sources/Sync/RetreatEngine.swift:212` | retreat() step size untested |
+| 🟠 | `Sources/Sync/ClampTests.swift:88` | clamp test traps on a negative index |
+
+`🟡 3 low · 🔵 2 info (in report)`
+
+**Table 2 — what was done.** One row per in-scope C/H/M finding, same order,
+carrying the disposition recorded in **Applying fixes**.
+
+| Sev | Finding | Disposition | Note |
+| - | - | - | - |
+| 🔴 | retreat() step size untested | fixed | added hop-2 discriminating test |
+| 🟠 | clamp test traps on a negative index | deferred | pre-existing; separate PR |
+
+Omit Table 2 **only** on a review-only run — instead say in one line that no fixes
+were applied because review-only was requested.
+
+End with the explicit report path so the caller can re-open the full report:
+
+```
+Report: ./docs/reviews/2026-06-23-review-42.md
+```
 
 No round-overview table for a single pass. Do not commit, push, open or comment
 on a PR, or notify anyone. Stop here.
@@ -277,7 +371,7 @@ For loop mode, the completion contract is the **loop summary** in Loop mode belo
 
 ## Loop mode
 
-Opt-in only (see **Two modes**). The invoking agent is the **orchestrator**: it
+Selected per **Choosing the mode**. The invoking agent is the **orchestrator**: it
 dispatches a review round, validates and applies the fixes that hold up,
 dispatches a fresh round over the fixed code, and repeats until a round stops
 surfacing substance. Why loop: the fixes are themselves unreviewed code — a fix
@@ -350,16 +444,18 @@ loop (see Phase 6).
 
 ### Loop completion contract — the conversation summary
 
-At the end of the loop, print this directly into the chat: a round-overview table,
-then the C/H/M findings one per line, then a stop-reason and the report path.
-LOW/INFO are counts only.
+At the end of the loop, print the same header + two tables as Phase 6, with the
+loop's per-round overview leading Table 1. Same hard gate: the loop is not finished
+until these are in the chat.
 
-A header line, then the round-overview table (one row per round; the Reviewers
-column lists that round's lenses):
+Header line:
 
 ```
 Code review · {N} rounds · {✅ Approved | ⚠️ Changes requested | 🚫 Blocked}
 ```
+
+**Table 1 — what the review found.** Lead with the round overview (one row per
+round; the Reviewers column lists that round's lenses):
 
 | Round | Reviewers | 🚨 | 🔴 | 🟠 | 🟡 | 🔵 | Verdict |
 | - | - | - | - | - | - | - | - |
@@ -367,23 +463,29 @@ Code review · {N} rounds · {✅ Approved | ⚠️ Changes requested | 🚫 Blo
 | R2 | Correctness · Code Quality · Test Rigor | 0 | 0 | 1 | 3 | 1 | ⚠️ Changes requested |
 | R3 | Comment Accuracy · Test Rigor | 0 | 0 | 0 | 2 | 2 | ✅ Approved |
 
-Then the findings block. Each C/H/M finding is one line —
-`<emoji> R<n> · <title> — <disposition>` — where the round tag `R<n>` shows *when*
-the finding surfaced (making "a later round caught a defect in an earlier round's
-fix" visible at a glance) and disposition is `fixed | deferred | disproved | open`.
-LOW/INFO collapse to counts:
+Then the findings themselves, each tagged with the round it surfaced in, so "a
+later round caught a defect in an earlier round's *fix*" is visible at a glance:
+
+| Sev | Round | Location | Finding |
+| - | - | - | - |
+| 🔴 | R1 | `Sources/Sync/RetreatEngine.swift:212` | retreat() step size untested |
+| 🟠 | R2 | `Sources/Sync/ClampTests.swift:88` | docstring claims coverage the test lacks |
+| 🟠 | R3 | `Sources/Sync/Index.swift:44` | off-by-one symptom named is unreachable |
+
+`🟡 7 low · 🔵 5 info (in report)`
+
+**Table 2 — what was done.** One row per in-scope C/H/M finding, keeping the round
+tag so the fix history stays legible:
+
+| Sev | Round | Finding | Disposition | Note |
+| - | - | - | - | - |
+| 🔴 | R1 | retreat() step size untested | fixed | added hop-2 discriminating test |
+| 🟠 | R2 | docstring claims coverage the test lacks | fixed | rewrote docstring to match |
+| 🟠 | R3 | off-by-one symptom named is unreachable | disproved | guard makes the branch dead |
+
+Then the **stop-reason** line and the report path:
 
 ```
-Findings (🚨 · 🔴 · 🟠) — 🟡 7 low · 🔵 5 info (in report)
-🔴 R1 · retreat() step size untested — fixed
-🟠 R1 · chevron.left doesn't mirror under RTL — fixed
-🟠 R1 · unbounded while-loop can hang the test target — fixed
-🟠 R1 · clamp test traps on a negative index — fixed
-🟠 R1 · gate-independence test is tautological — fixed
-🟠 R1 · comment asserts unverified "Mac has no swipe" — fixed
-🟠 R2 · docstring claims coverage the test lacks — fixed
-🟠 R3 · off-by-one symptom named is unreachable — fixed
-
 Stopped after R3: round returned only low/info — converged.
 Report: ./docs/reviews/2026-07-19-review-271.md
 ```

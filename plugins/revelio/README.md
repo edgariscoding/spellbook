@@ -5,8 +5,8 @@
 A scope-disciplined, multi-lens code review for solo development on GitHub. It
 reveals the issues hiding in a change — bugs, vulnerabilities, design problems,
 and quality gaps — rates them by severity, and renders a verdict, **before** you
-open a pull request. It reviews code and reports; it never creates PRs, posts
-comments, sets approval status, or notifies anyone.
+open a pull request. It reviews code, applies the fixes that hold up, and reports;
+it never creates PRs, posts comments, sets approval status, or notifies anyone.
 
 ## Triggers
 
@@ -15,18 +15,35 @@ comments, sets approval status, or notifies anyone.
 
 ## Modes
 
-- **Single pass** (default) — one fan-out, one report, one summary. Review-only:
-  reports findings and never fixes. This is what the triggers above run.
-- **Loop** (opt-in) — review → apply the fixes that hold up → fresh, blind
-  re-review → repeat until a round surfaces only LOW/INFO (converged), capped at
-  3 rounds (a 4th only with stated justification). Fixes code between rounds.
-  Triggered explicitly by **"review loop"**, **"review, fix, and re-review"**, or
-  **"loop the review"**.
+The mode is chosen **from the change itself** — its criticality, complexity, and
+breadth — and announced with a one-line reason before reviewers are dispatched.
+
+- **Single pass** — one fan-out, one report. Reviews, then applies the fixes that
+  hold up. Used for changes confined to one surface, small-to-moderate in size, in
+  non-core logic: UI/layout/copy, docs, tests-only, config tweaks, dependency
+  bumps, and ordinary everyday feature work.
+- **Loop** — review → apply the fixes that hold up → fresh, blind re-review →
+  repeat until a round surfaces only LOW/INFO (converged), capped at 3 rounds (a
+  4th only with stated justification). Used when the change is **core** (auth,
+  persistence/migrations, concurrency/cancellation/state machines, security paths,
+  shared infrastructure, public API, build/CI), **correctness-critical** (a bug
+  means data loss, a crash, a security hole, or silently wrong behavior), or
+  **broad** (≥2 technology specialists on a non-trivial change, or ≥~8 files /
+  ≥~300 net lines).
+
+When a change is borderline and not clearly core, critical, or broad, single pass
+wins — the loop costs 2–3× the tokens and wall-clock, so it is reserved for changes
+that earn it. An explicit request overrides the heuristic in either direction:
+**"single pass"** forces one; **"review loop"**, **"review, fix, and re-review"**,
+or **"loop the review"** force the loop.
 
 Each loop round dispatches fresh reviewers that are **blind to prior rounds** —
 they see only the current code, never the earlier findings — which is what lets a
-later round catch a defect in an earlier round's *fix*. The loop costs 2–3× the
-tokens and wall-clock, so single pass stays the default.
+later round catch a defect in an earlier round's *fix*.
+
+**Both modes apply fixes.** Reviewers never fix their own findings; only the
+orchestrating session does, which is what keeps later rounds' reviewers
+independent. Ask to **"just review"** / **"review only"** to skip fixing entirely.
 
 ## Review targets
 
@@ -64,11 +81,16 @@ current platform guidance rather than memory.
   each round appends a `## Review Round {N}` section to the same report.
 - The report is a **local artifact** — not committed or pushed. Add
   `docs/reviews/` to your `.gitignore`.
-- Ends with a chat summary that finishes with the report path, so an autonomous
-  agent gets the result inline and can re-open the full report. A single pass
-  prints the verdict, severity counts, and top blocking findings; a loop prints a
-  round-overview table, the C/H/M findings tagged by round and disposition, and a
-  stop-reason.
+- Ends with **two summary tables printed into the chat**, so an autonomous agent
+  gets the result inline and can re-open the full report:
+  - **Table 1 — what the review found:** every in-scope CRITICAL/HIGH/MEDIUM
+    finding with its location; LOW/INFO as counts. In loop mode this is led by a
+    round-overview table and each finding carries the round it surfaced in.
+  - **Table 2 — what was done:** each of those findings marked `fixed`,
+    `deferred`, `disproved`, or `open`, with a one-line note. Omitted only on a
+    review-only run.
+- Both tables are a **completion gate** — the review isn't done until they're in
+  the conversation — and the summary ends with the explicit report path.
 
 ## Verdict
 
