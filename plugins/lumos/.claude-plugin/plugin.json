@@ -1,0 +1,8 @@
+{
+  "name": "lumos",
+  "version": "1.0.0",
+  "description": "The Wand-Lighting Charm for your workflow. Lights the way through a change from scope to ship — agree scope, design with legilimens, verify green, review with revelio, and keep issue/board/commit hygiene. The generic spine that sits between the charms; project specifics live in the repo's CLAUDE.md.",
+  "author": {
+    "name": "Edgar Sanchez"
+  }
+}

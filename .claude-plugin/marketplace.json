@@ -1,7 +1,7 @@
 {
   "name": "spellbook",
   "description": "Edgar's personal collection of Claude Code plugins",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "owner": {
     "name": "Edgar Sanchez",
     "email": "edgar@sanchez.is"
@@ -18,6 +18,20 @@
       "name": "legilimens",
       "description": "Turns a rough idea into an agreed design through Socratic dialogue — one question at a time, real alternatives with trade-offs, and a design approved section by section — then writes the spec and hands off. Never writes code.",
       "source": "./plugins/legilimens",
+      "category": "developer-tools",
+      "homepage": "https://github.com/edgariscoding/spellbook"
+    },
+    {
+      "name": "lumos",
+      "description": "The workflow spine — lights the way through a change from scope to ship, naming legilimens at the design step and revelio at the review step. Generic and project-agnostic; reads project specifics from the repo's CLAUDE.md.",
+      "source": "./plugins/lumos",
+      "category": "developer-tools",
+      "homepage": "https://github.com/edgariscoding/spellbook"
+    },
+    {
+      "name": "erecto",
+      "description": "One-time repo scaffolder — interviews you, then writes a new project's CLAUDE.md (workflow invariants + project constants), a GitHub issue template, and a review-reports gitignore entry. Ships no baked-in defaults.",
+      "source": "./plugins/erecto",
       "category": "developer-tools",
       "homepage": "https://github.com/edgariscoding/spellbook"
     }
