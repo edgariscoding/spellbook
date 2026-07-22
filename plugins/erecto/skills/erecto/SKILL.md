@@ -49,7 +49,10 @@ are asked, so the skill stays generic.
 5. **Work tracking** — does the project use GitHub issues + a project board? If so,
    ask for the **board number, the project-id, the Status field id and its option
    ids**, and confirm the `gh project item-edit` card-move command shape. Do **not**
-   pre-fill these — paste them from an existing repo if you have one.
+   pre-fill these — paste them from an existing repo if you have one. **If the board
+   is shared across multiple repos, the card lookup MUST disambiguate by repository**
+   — issue numbers repeat across repos, so an unscoped `select(.content.number==N)`
+   can grab the wrong repo's card; add `and (.content.repository//""|test("<repo>"))`.
 6. **Tech-doc source** — the documentation source to consult over memory for
    platform/API questions (e.g. an MDN MCP for web/JS, an Apple-docs MCP for Swift,
    or none).
@@ -58,7 +61,11 @@ are asked, so the skill stays generic.
    copy section. **Yes** → ask for the source(s) as links or file paths, read them,
    and **distill a self-contained section** into this repo's `CLAUDE.md`. Never
    leave a live cross-repo link — copy the durable rules in, so they can't rot or
-   404 when the source moves.
+   404 when the source moves. **Distill, don't dump:** extract the rules and only the
+   glossary/table the project actually needs — never copy a source's tooling,
+   methodology, regeneration scripts, or machine artifacts (e.g. a scraper, a `.csv`
+   companion). If a large reference table is worth keeping, copy just the table into
+   a repo doc, not the surrounding tooling.
 
 ---
 
@@ -88,7 +95,8 @@ Compose it from three parts, in order:
    - **Work tracking:** GitHub issues (from the interview). If the project uses a
      board, add its number and a card-move command; if not, note "no board":
      ```bash
-     <gh project item-edit with this repo's board/field/option ids — omit if no board>
+     <gh project item-edit with this repo's board/field/option ids; scope the card
+      lookup by repository if the board is shared — omit the block if no board>
      ```
    - **Copy voice / terms:** <distilled, self-contained rules — or "none">
    ```

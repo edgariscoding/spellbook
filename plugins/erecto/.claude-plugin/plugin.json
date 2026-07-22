@@ -1,6 +1,6 @@
 {
   "name": "erecto",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The Structure-Erecting Charm for a new repo. Run once to stand up a project's working setup: it interviews you about how the project works, then writes its CLAUDE.md (fixed workflow invariants + filled project constants), a GitHub issue template, and a gitignore entry for review reports. Ships no baked-in defaults and is safe by default — it never blind-overwrites existing files.",
   "author": {
     "name": "Edgar Sanchez"
