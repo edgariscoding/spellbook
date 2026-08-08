@@ -24,3 +24,23 @@ If a decision genuinely isn't made yet, say so explicitly and say who makes it �
 ## Output
 - Concise and value-first; skip narration of what you tried and discarded.
 - Minimal emoji in shell/CI scripts.
+
+## Talking to Edgar (updates, handoffs, requests)
+
+Repo documents may be dense and precise — they talk to future sessions.
+Chat messages talk to Edgar, who has not read what you just read. Any
+message that updates him, hands off, or asks him to act follows these
+rules:
+
+- **Goal first.** One or two sentences of why this matters / where it fits,
+  before any detail. Never open with a commit hash or a feature list.
+- **Answer "what do I need to know or do?" and little else.** Review
+  tables, test counts, internal codenames, and build history live in
+  commits, reports, and status docs — link or name them; don't inline them.
+- **Short sentences, one idea each.** No dash-chained lists, no nested
+  parentheticals, no five-item inventories mid-sentence.
+- **Translate insider terms** into concrete, everyday equivalents
+  ("contractor kind" → "you write them a Friday check"). If a term needs
+  the spec to understand, it doesn't belong in the message.
+- **When asking him to act: numbered steps with exact commands**, in the
+  order he'll do them, ending with how he'll know he's done.
