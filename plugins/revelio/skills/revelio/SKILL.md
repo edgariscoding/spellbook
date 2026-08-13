@@ -147,6 +147,39 @@ Read the files directly and review the full content (no diff context).
 Everything provided is in scope. Lead with security and architecture; don't
 nitpick style on pre-existing code unless asked.
 
+### Comments are reviewed against one rule, and it is not accuracy
+
+**Do not verify claims a comment makes about other files, ADRs, tickets or past
+decisions.** That work is unbounded, and correcting a comment produces fresh
+prose for the next round to correct — a loop that has cost real reviews several
+rounds without improving any code. A comment is not the specification.
+
+Ask instead: **would this comment stop someone making a wrong change here?**
+
+- **If yes, it stays** — whatever its length. The constraint that makes
+  surprising code correct, the trap that bites the next editor, the thing that
+  must stay in step with something else. Never propose shortening one of these.
+- **If no, flag it** — when it narrates what the code already says, recounts
+  history the VCS already holds, restates a decision recorded elsewhere, or
+  cites file paths and line numbers that will rot.
+
+**Report all of them as ONE finding for the whole diff**, listing the locations,
+severity LOW. It is a single cleanup pass, not one finding per comment, and it
+must never crowd out a real defect. Include one before/after so the shape is
+unmistakable:
+
+> *Before, 14 lines:* the ordering rationale, what was tried, what was reverted,
+> and two file references.
+> *After, 2 lines:* "Answers land before the completion record: interrupted
+> here, the week still reads In progress and the button finishes it."
+
+**Why this rule terminates and claim-checking does not:** the fix here is
+deletion, and deleted text cannot be re-reviewed.
+
+**Comment prose is never CRITICAL / HIGH / MEDIUM.** The one exception: a comment
+that would lead the next implementer to make a wrong change is a real defect, and
+it is graded on that change, not on the prose.
+
 ---
 
 ## Phase 3: Review Execution
@@ -212,9 +245,11 @@ scope, and nullable-reference-type annotations.
 Give every dispatched reviewer: the diff (or, for file/folder reviews, the changed
 files), its lens or specialty, and these instructions — review only the change
 against the Phase 2 scope rules; you did **not** write this code, so review it
-skeptically and assume nothing is correct until verified; (specialists only) load
-your skill(s) via the Skill tool first; use full file paths from the repository
-root; return the findings block and nothing else.
+skeptically and assume nothing is correct until verified; **do not verify claims
+made in comments, and judge a comment only by Phase 2's one-rule test, reported
+as a single LOW finding for the whole diff**; (specialists only) load your
+skill(s) via the Skill tool first; use full file paths from the repository root;
+return the findings block and nothing else.
 
 Each sub-agent returns findings in this structure:
 
@@ -431,6 +466,10 @@ loop (see Phase 6).
 - **Only the orchestrator fixes, and only between rounds.** A reviewer never fixes
   its own findings. Because the next round's reviewers are fresh and blind,
   orchestrator fixes never compromise reviewer independence.
+- **A condensed comment is not new surface.** Later rounds narrow to the code
+  changed since the previous round, and a comment shortened between rounds does
+  not re-enter the review as prose to assess. Put "comments already condensed"
+  on the known/deferred list so no round spends itself there.
 
 ### Convergence and the round cap
 
