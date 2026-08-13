@@ -21,9 +21,38 @@ If a decision genuinely isn't made yet, say so explicitly and say who makes it �
 - Surgical changes: touch only what the task needs; match the surrounding style.
 - If you spot unrelated dead code, mention it — don't delete it.
 
+### Comments earn their place, and long ones cost more than they look
+
+**The test: would this comment stop someone making a wrong change here?** If
+not, it isn't earning its place, whatever else it's doing.
+
+**Write:** the constraint that makes surprising code correct; the trap that
+bites the next editor ("DROP TABLE takes its indexes with it"); the thing
+that must stay in step with something else.
+
+**Don't write:** what the code does, because the code says it. How we got
+here, what was tried, what was reverted — git says it. The argument for a
+decision, because the ADR or the spec says it and two sources of truth
+drift. Measured numbers, which go stale silently.
+
+**At most one pointer per comment**, and only where a reader would otherwise
+re-litigate something settled. Name the record; never summarise it.
+
+**Past roughly eight lines, the reasoning belongs somewhere else.** A signal,
+not a hard cap: exceed it when you can say why in one sentence.
+
+**Why this is a rule and not a preference:** every file a comment names and
+every decision it restates is review surface. Rounds have been lost to a
+reviewer checking comment prose, finding a small inaccuracy, and the next
+round finding another one in the fix.
+
 ## Output
 - Concise and value-first; skip narration of what you tried and discarded.
 - Minimal emoji in shell/CI scripts.
+- **Name a document only when the reader has a reason to open it.** If the
+  sentence still works with the name deleted, delete it. A reference is a
+  pointer, not provenance, and not a credential. Applies everywhere: code
+  comments, specs, decision records, commit messages, chat.
 
 ## Talking to Edgar (updates, handoffs, requests)
 
