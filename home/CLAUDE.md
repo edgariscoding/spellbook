@@ -18,7 +18,12 @@ No placeholders. A deferred decision dressed up as a settled one is a spec failu
 If a decision genuinely isn't made yet, say so explicitly and say who makes it — don't paper over it with a phrase that reads as decided.
 
 ## Editing
-- Surgical changes: touch only what the task needs; match the surrounding style.
+- Surgical changes: touch only what the task needs; match the surrounding **code**
+  style: naming, idiom, structure, file layout.
+- **Do not imitate the surrounding prose style.** Comments, docstrings, and
+  documentation follow the writing rules in this file and the active output style
+  even when the file around them does not. Most of this codebase predates those
+  rules, so the local convention is not the standard.
 - If you spot unrelated dead code, mention it — don't delete it.
 
 ### Comments earn their place, and long ones cost more than they look
@@ -54,9 +59,23 @@ round finding another one in the fix.
   pointer, not provenance, and not a credential. Applies everywhere: code
   comments, specs, decision records, commit messages, chat.
 
+## Dispatching subagents
+
+Subagents run their own system prompt, so they do **not** inherit the active
+output style. Any subagent whose output is prose or code (a reviewer, a writer,
+an editor, a sweeper) gets this paragraph pasted verbatim into its prompt:
+
+> Write in plain English. State each claim directly rather than building to it.
+> One idea per sentence, nothing over 40 words, complete sentences. No em dashes
+> or substitutes. No fragments for emphasis. No "X, not Y" reframes. No second
+> clause appended with a colon, a dash, or parentheses. Do not imitate the prose
+> style of the surrounding file or repo; most of it predates this rule.
+
 ## Talking to Edgar (updates, handoffs, requests)
 
-Repo documents may be dense and precise — they talk to future sessions.
+Repo documents are precise and talk to future sessions. Precise does not mean
+dense. A future session reads a document once and under load, so a sentence that
+needs a second pass costs it as much as it costs Edgar.
 Chat messages talk to Edgar, who has not read what you just read. Any
 message that updates him, hands off, or asks him to act follows these
 rules:
