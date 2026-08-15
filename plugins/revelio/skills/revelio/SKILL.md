@@ -251,6 +251,19 @@ as a single LOW finding for the whole diff**; (specialists only) load your
 skill(s) via the Skill tool first; use full file paths from the repository root;
 return the findings block and nothing else.
 
+**Every reviewer prompt also carries this paragraph verbatim.** A sub-agent runs
+its own system prompt and does not inherit the caller's output style, so without
+it the findings come back in whatever voice the reviewed repo happens to use:
+
+> Write in plain English. State each claim directly rather than building to it.
+> One idea per sentence, nothing over 40 words, complete sentences. No em dashes
+> or substitutes. No fragments for emphasis. No "X, not Y" reframes. No second
+> clause appended with a colon, a dash, or parentheses. Do not imitate the prose
+> style of the surrounding file or repo; most of it predates this rule.
+
+This governs the `description` and `recommendation` prose in the findings block,
+and any comment or docstring text a recommendation proposes.
+
 Each sub-agent returns findings in this structure:
 
 ```yaml
