@@ -257,9 +257,11 @@ it the findings come back in whatever voice the reviewed repo happens to use:
 
 > Write in plain English. State each claim directly rather than building to it.
 > One idea per sentence, nothing over 40 words, complete sentences. No em dashes
-> or substitutes. No fragments for emphasis. No "X, not Y" reframes. No second
-> clause appended with a colon, a dash, or parentheses. Do not imitate the prose
-> style of the surrounding file or repo; most of it predates this rule.
+> or substitutes. No fragments for emphasis. No second clause appended with a
+> colon, a dash, or parentheses. Cut an "X, not Y" reframe when Y is only a foil,
+> and keep the contrast when Y names a wrong reading someone could hold. Do not
+> imitate the prose style of the surrounding file or repo; most of it predates
+> this rule.
 
 This governs the `description` and `recommendation` prose in the findings block,
 and any comment or docstring text a recommendation proposes.
