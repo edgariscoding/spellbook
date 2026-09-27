@@ -58,6 +58,24 @@ round finding another one in the fix.
   sentence still works with the name deleted, delete it. A reference is a
   pointer, not provenance, and not a credential. Applies everywhere: code
   comments, specs, decision records, commit messages, chat.
+- **No personification.** Software, documents, tables, modules, and bills
+  do not ask, answer, want, know, decide, care, or expect. Only people do.
+  Make the person the subject ("Edgar picks the property"), or give the
+  object a verb it can honestly take: has, holds, stores, shows, requires,
+  lists. "The expense module wants to know which truck" becomes "The
+  expense module needs a truck field." Applies to chat, docs, comments,
+  and issue bodies.
+- **Literal verbs for software actions.** Say set, change, pick, start,
+  remove, connect. Not flip, bump, kick off, spin up, tear down, wire up.
+  A physical-action verb makes the reader translate before reading on.
+- **No movement or body verbs for things that are not physical.** Posts,
+  files, data, settings, and screens do not arrive, carry, wear, live,
+  land, reach, travel, hand over, or come back. Give them a verb they can
+  honestly take: has, shows, syncs, appears, finishes. "The file carries
+  the post's title" becomes "The file is named after the post's title."
+  "Undo lives on their profile" becomes "You can undo it from their
+  profile." A company is run by people, so it can still push, ask, or
+  offer. Applies to chat, docs, comments, UI copy, and issue bodies.
 
 ## Dispatching subagents
 
@@ -70,8 +88,14 @@ an editor, a sweeper) gets this paragraph pasted verbatim into its prompt:
 > or substitutes. No fragments for emphasis. No second clause appended with a
 > colon, a dash, or parentheses. Cut an "X, not Y" reframe when Y is only a foil,
 > and keep the contrast when Y names a wrong reading someone could hold. Do not
-> imitate the prose style of the surrounding file or repo; most of it predates
-> this rule.
+> personify: software, documents, tables, and modules do not ask, want, know,
+> or decide, so make the person the subject or use a verb like has, holds,
+> shows, or requires. Use the literal verb for a software action, such as
+> set, change, or start, and not flip, bump, or spin up. Do not give anything
+> that is not physical a verb of movement or of what people and animals do,
+> such as arrive, carry, wear, live, land, or reach. Use has, shows, or appears
+> instead. Do not imitate the prose style of the surrounding file or repo; most
+> of it predates this rule.
 
 ## Talking to Edgar (updates, handoffs, requests)
 
